@@ -1,0 +1,46 @@
+{
+  "grafana": {
+    "baseUrl": "http://172.26.99.26:3000",
+    "dashboardUrl": "http://172.26.99.26:3000/d/a432b915-8399-4f17-b2f5-4ea9c7af346d/e68ea5-e58fa3-e8afa6-e7bb86?orgId=1&from=now-5m&to=now&timezone=browser&var-Api=User_UserPostedV4",
+    "dashboardUid": "a432b915-8399-4f17-b2f5-4ea9c7af346d",
+    "dashboardName": "e68ea5-e58fa3-e8afa6-e7bb86",
+    "datasourceUid": "a930f974-4513-411b-9d2c-882a9510b71c",
+    "metricName": "xhs_api_request_status_code",
+    "beforeLimitMetricName": "xhs_api_before_limit_request",
+    "apiLabel": "ApiPath",
+    "rateInterval": "1m",
+    "jobLabel": "job",
+    "jobValue": "xhs_gateway",
+    "useSimulate": false,
+    "username": "hz",
+    "password": "EcQMZpzuFst5UK"
+  },
+  "feishu": {
+    "webhookUrl": "https://open.feishu.cn/open-apis/bot/v2/hook/46a0f903-f7ed-4617-a159-1da1f98e3757"
+  },
+  "monitor": {
+    "apis": [
+      { "name": "User_UserPostedV4", "threshold": 10 },
+      { "name": "User_UserByApi", "threshold": 10 },
+      { "name": "Feed_Comment", "threshold": 10 },
+      { "name": "Feed_CommentPageL1", "threshold": 10 },
+      { "name": "Feed_ImageFeed", "threshold": 10 },
+      { "name": "User_UserExtraInfo", "threshold": 10 },
+      { "name": "Store_StoreVariantH5", "threshold": 10 },
+      { "name": "Store_GoodsCardShowInfo", "threshold": 10 },
+      { "name": "Feed_NoteWidgetsPost", "threshold": 10 },
+      { "name": "Search_WordSearchNotes", "threshold": 10 },
+      { "name": "User_UserInfoV3", "threshold": 10 },
+      { "name": "Live_LiveGoods", "threshold": 10 },
+      { "name": "Feed_PoiInfoV1", "threshold": 10 },
+      { "name": "Feed_PoiSceneIndexV3", "threshold": 10 },
+      { "name": "Feed_KolNotesDetail", "threshold": 10 }
+    ],
+    "checkInterval": 60000,
+    "defaultQpsThreshold": 10,
+    "alertCooldown": 300000
+  },
+  "server": {
+    "port": 3005
+  }
+}

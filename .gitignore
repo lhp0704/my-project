@@ -1,0 +1,8 @@
+.claude/settings.local.json
+qps-monitor/config/local.json
+node_modules/
+**/node_modules/
+.DS_Store
+*.log
+dist/
+build/

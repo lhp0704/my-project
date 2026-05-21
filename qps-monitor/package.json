@@ -1,0 +1,21 @@
+{
+  "name": "qps-monitor",
+  "version": "1.0.0",
+  "description": "Grafana QPS Monitor with Feishu Alerts",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "node server/app.js"
+  },
+  "dependencies": {
+    "koa": "^2.14.2",
+    "koa-bodyparser": "^4.4.1",
+    "koa-static": "^5.0.0",
+    "@koa/router": "^12.0.0",
+    "axios": "^1.6.0",
+    "cron": "^2.3.0"
+  },
+  "keywords": ["qps", "monitor", "grafana", "feishu"],
+  "author": "",
+  "license": "MIT"
+}

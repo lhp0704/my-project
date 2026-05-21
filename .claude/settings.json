@@ -1,0 +1,102 @@
+{
+  "permissions": {
+    "read": {
+      "allow": [
+        "**/*"
+      ]
+    },
+    "bash": {
+      "allow": [
+        "git status",
+        "git diff",
+        "git log",
+        "node --version",
+        "npm --version",
+        "ls",
+        "dir"
+      ]
+    }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-start.js || true",
+            "statusMessage": "发送飞书 SessionStart 通知..."
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-end.js || true",
+            "statusMessage": "发送飞书 SessionEnd 通知..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/pre-tool-use.js || true",
+            "statusMessage": "发送飞书 PreToolUse 通知..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/post-tool-use.js || true",
+            "statusMessage": "发送飞书 PostToolUse 通知..."
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/post-tool-use-failure.js || true",
+            "statusMessage": "发送飞书 PostToolUseFailure 通知..."
+          }
+        ]
+      }
+    ],
+    "TaskCreated": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/task-created.js || true",
+            "statusMessage": "发送飞书 TaskCreated 通知..."
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/task-completed.js || true",
+            "statusMessage": "发送飞书 TaskCompleted 通知..."
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {},
+  "extraKnownMarketplaces": {},
+  "verbose": true
+}

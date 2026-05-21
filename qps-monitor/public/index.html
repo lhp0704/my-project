@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小红书接口监控系统</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f4f6f8;
+      color: #111827;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 {
+      color: #111827;
+      margin-bottom: 18px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .card h2 {
+      color: #111827;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card h2 span {
+      background: #f3f4f6;
+      color: #4b5563;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .qps-item {
+      background: #ffffff;
+      color: #111827;
+      padding: 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .qps-item:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+    .qps-item.low {
+      background: #fffafa;
+      border-color: #fca5a5;
+    }
+    .qps-item.low:hover {
+      box-shadow: 0 8px 20px rgba(127, 29, 29, 0.06);
+    }
+    .qps-item .api-name {
+      font-size: 13px;
+      color: #4b5563;
+      margin-bottom: 8px;
+      word-break: break-all;
+      font-weight: 600;
+    }
+    .qps-item .qps-value {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #111827;
+    }
+    .qps-item .qps-label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .qps-item .threshold-info {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #f3f4f6;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 8px;
+      background: #f3f4f6;
+    }
+    .status-badge.ok { background: #f3f4f6; color: #374151; }
+    .status-badge.low { background: #fee2e2; color: #991b1b; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #374151;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      height: 42px;
+      padding: 10px 14px;
+      border: 1px solid #d8dee6;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #111827;
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+      background: #ffffff;
+      box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02);
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      background: white;
+    }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: #9ca3af; }
+    .form-group input[type="password"] { font-family: monospace; letter-spacing: 2px; }
+    .form-group textarea {
+      height: auto;
+      min-height: 120px;
+      resize: vertical;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      line-height: 1.5;
+    }
+    select {
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #64748b 50%), linear-gradient(135deg, #64748b 50%, transparent 50%);
+      background-position: calc(100% - 18px) 18px, calc(100% - 13px) 18px;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 42px !important;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .form-row-4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; align-items: end; }
+    .btn {
+      background: #111827;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: none;
+    }
+    .btn:hover {
+      background: #1f2937;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+    }
+    .btn-secondary {
+      background: #ffffff;
+      color: #111827;
+      border: 1px solid #d1d5db;
+    }
+    .btn-secondary:hover {
+      background: #f8fafc;
+      border-color: #9ca3af;
+      color: #111827;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+    }
+    .btn-small { padding: 8px 16px; font-size: 13px; }
+    .btn-danger {
+      background: #ffffff;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .btn-danger:hover {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      color: #7f1d1d;
+      box-shadow: 0 1px 4px rgba(127, 29, 29, 0.08);
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 18px;
+      background: #ffffff;
+      padding: 4px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      color: #4b5563;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: #111827; background: #f9fafb; }
+    .tab.active {
+      background: #111827;
+      color: white;
+      box-shadow: none;
+    }
+    .alert-item {
+      padding: 16px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .alert-item .alert-time { font-size: 13px; color: #6b7280; font-weight: 500; }
+    .alert-item .alert-content { color: #111827; font-weight: 500; }
+    .last-update {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .config-section {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .config-section:last-child { border-bottom: none; }
+    .config-section h3 {
+      font-size: 15px;
+      color: #1f2937;
+      margin-bottom: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .config-section h3::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: #111827;
+      border-radius: 2px;
+    }
+    .checkbox-row { display: flex; align-items: center; gap: 10px; }
+    .checkbox-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #111827;
+    }
+    .checkbox-row label { margin-bottom: 0; cursor: pointer; user-select: none; }
+    .api-table { width: 100%; border-collapse: collapse; }
+    .api-table th, .api-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .api-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 13px;
+    }
+    .api-table td { font-size: 14px; }
+    .api-table input { width: 100%; }
+    .api-table tr:hover td { background: #f9fafb; }
+    .table-actions { display: flex; gap: 8px; }
+    .api-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .api-list-title {
+      color: #374151;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .help-text { font-size: 12px; color: #6b7280; margin-top: 6px; }
+    .save-message {
+      padding: 12px 20px;
+      background: #f3f4f6;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-weight: 500;
+      display: inline-block;
+      margin-left: 12px;
+    }
+    .toast-stack {
+      position: fixed;
+      z-index: 50;
+      top: 24px;
+      right: 24px;
+      width: min(360px, calc(100vw - 32px));
+    }
+    .toast {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+      overflow: hidden;
+      animation: toast-in 0.18s ease-out;
+    }
+    .toast.success {
+      background: #f7fdf9;
+      border-color: #c7eed8;
+    }
+    .toast.error {
+      background: #fff8f8;
+      border-color: #f3c6c6;
+    }
+    .toast-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 16px 8px;
+    }
+    .toast-title {
+      color: #111827;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .toast.success .toast-title { color: #166534; }
+    .toast.error .toast-title { color: #991b1b; }
+    .toast-close {
+      width: 28px;
+      height: 28px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .toast-close:hover {
+      background: #f8fafc;
+      border-color: #e5e7eb;
+      color: #111827;
+    }
+    .toast-body {
+      padding: 0 16px 14px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .toast-message { color: #4b5563; }
+    .toast.success .toast-message,
+    .toast.error .toast-message { color: #4b5563; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .stats-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      background: #ffffff;
+      color: #111827;
+      padding: 16px 24px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      flex: 1;
+      min-width: 150px;
+    }
+    .stat-item.low-stat {
+      background: #fffafa;
+      border-color: #fca5a5;
+    }
+    .stat-item .stat-label { font-size: 13px; color: #6b7280; }
+    .stat-item .stat-value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+    .chart-panel {
+      overflow: hidden;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    .chart-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #ffffff;
+    }
+    .chart-toolbar-title {
+      color: #374151;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .chart-filter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+    .chart-filter-label {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .chart-filter select {
+      height: 34px;
+      padding: 7px 12px;
+      border: 1px solid #d8dee6;
+      border-radius: 7px;
+      font-size: 13px;
+      background-color: #ffffff;
+      color: #111827;
+      min-width: 220px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .chart-filter select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .chart-container {
+      position: relative;
+      height: 420px;
+      padding: 18px;
+      background: #f8fafc;
+    }
+    @media (max-width: 640px) {
+      .chart-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .chart-filter {
+        margin-left: 0;
+      }
+      .chart-filter select {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+      <h1>小红书接口监控系统</h1>
+
+      <div class="tabs">
+        <button class="tab" :class="{ active: currentTab === 'dashboard' }" @click="currentTab = 'dashboard'">
+          监控面板
+        </button>
+        <button class="tab" :class="{ active: currentTab === 'config' }" @click="currentTab = 'config'">
+          配置管理
+        </button>
+        <button class="tab" :class="{ active: currentTab === 'alerts' }" @click="currentTab = 'alerts'">
+          报警历史
+        </button>
+      </div>
+
+      <div v-if="currentTab === 'dashboard'">
+        <div class="card">
+          <h2>实时 QPS 数据 <span>{{ Object.keys(currentQPS).length }} 个接口</span></h2>
+          <div class="stats-bar">
+            <div class="stat-item">
+              <div class="stat-label">正常接口</div>
+              <div class="stat-value">{{ healthyCount }}</div>
+            </div>
+            <div class="stat-item low-stat">
+              <div class="stat-label">异常接口</div>
+              <div class="stat-value">{{ lowCount }}</div>
+            </div>
+          </div>
+          <div class="grid">
+            <div v-for="(qps, api) in currentQPS" :key="api" class="qps-item" :class="{ low: isAbnormal(api, qps) }">
+              <div class="api-name">{{ api }}</div>
+              <div class="qps-value">{{ formatQps(getActualQps(qps)) }}</div>
+              <div class="qps-label">实际速率</div>
+              <div class="threshold-info">
+                限速前: {{ formatQps(getRawQps(qps)) }} / 差值: {{ formatQps(getDiffQps(qps)) }} / 阈值: {{ getThreshold(api) }}
+              </div>
+              <span v-if="isAbnormal(api, qps)" class="status-badge low">异常 {{ getAbnormalStreak(qps) }}/{{ getAlertRequiredStreak(qps) }} 次</span>
+              <span v-else class="status-badge ok">正常</span>
+            </div>
+          </div>
+          <div class="last-update">最后更新: {{ lastUpdate }}</div>
+        </div>
+
+        <div class="card">
+          <h2>实时 QPS 趋势</h2>
+          <div class="chart-panel">
+            <div class="chart-toolbar">
+              <div class="chart-toolbar-title">最近 30 分钟</div>
+              <div class="chart-filter">
+                <select v-model="selectedApi" @change="updateChart">
+                  <option value="">全部接口</option>
+                  <option v-for="api in apiNames" :key="api" :value="api">{{ api }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="qpsChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="currentTab === 'config'" class="card">
+        <h2>配置管理</h2>
+        <form @submit.prevent="saveConfig">
+          <div class="config-section">
+            <h3>Grafana 配置</h3>
+            <div class="form-group checkbox-row">
+              <input type="checkbox" id="useSimulate" v-model="config.grafana.useSimulate" />
+              <label for="useSimulate">使用模拟数据（测试时使用）</label>
+            </div>
+            <div class="form-group">
+              <label>Grafana 地址</label>
+              <input v-model="config.grafana.baseUrl" placeholder="http://localhost:3000" />
+            </div>
+            <div class="form-group">
+              <label>Grafana Dashboard 地址</label>
+              <input v-model="config.grafana.dashboardUrl" placeholder="http://localhost:3000/d/uid/name?orgId=1" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>用户名</label>
+                <input v-model="config.grafana.username" placeholder="username" />
+              </div>
+              <div class="form-group">
+                <label>密码</label>
+                <input type="password" v-model="config.grafana.password" placeholder="password" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>数据源 UID</label>
+                <input v-model="config.grafana.datasourceUid" placeholder="a930f974-4513-411b-9d2c-882a9510b71c" />
+              </div>
+              <div class="form-group">
+                <label>指标名称</label>
+                <input v-model="config.grafana.metricName" placeholder="xhs_api_request_status_code" />
+              </div>
+              <div class="form-group">
+                <label>限速前指标名称</label>
+                <input v-model="config.grafana.beforeLimitMetricName" placeholder="xhs_api_before_limit_request" />
+              </div>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>API 标签</label>
+                <input v-model="config.grafana.apiLabel" placeholder="ApiPath" />
+              </div>
+              <div class="form-group">
+                <label>Job 标签</label>
+                <input v-model="config.grafana.jobLabel" placeholder="job" />
+              </div>
+              <div class="form-group">
+                <label>Job 值</label>
+                <input v-model="config.grafana.jobValue" placeholder="xhs_gateway" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Rate 时间窗口</label>
+              <input v-model="config.grafana.rateInterval" placeholder="1m" />
+            </div>
+          </div>
+
+          <div class="config-section">
+            <h3>飞书通知</h3>
+            <div class="form-group">
+              <label>飞书 Webhook URL</label>
+              <input v-model="config.feishu.webhookUrl" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxx" />
+            </div>
+          </div>
+
+          <div class="config-section">
+            <h3>监控配置</h3>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>默认差值报警阈值</label>
+                <input type="number" v-model.number="config.monitor.defaultQpsThreshold" />
+              </div>
+              <div class="form-group">
+                <label>检查间隔（毫秒）</label>
+                <input type="number" v-model.number="config.monitor.checkInterval" />
+              </div>
+              <div class="form-group">
+                <label>报警冷却（毫秒）</label>
+                <input type="number" v-model.number="config.monitor.alertCooldown" />
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 16px;">
+              <div class="api-list-header">
+                <span class="api-list-title">接口配置列表</span>
+                <button type="button" class="btn btn-small btn-secondary" @click="addApi">
+                  添加接口
+                </button>
+              </div>
+              <div style="overflow-x: auto;">
+                <table class="api-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 50%;">接口名称</th>
+                      <th style="width: 25%;">差值阈值</th>
+                      <th style="width: 25%;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(api, index) in config.monitor.apis" :key="index">
+                      <td><input v-model="api.name" placeholder="接口名称" /></td>
+                      <td><input type="number" v-model.number="api.threshold" /></td>
+                      <td>
+                        <div class="table-actions">
+                          <button type="button" class="btn btn-small btn-secondary" @click="sendApiAlert(api.name)">发送报警</button>
+                          <button type="button" class="btn btn-small btn-danger" @click="removeApi(index)">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="help-text">提示：接口异常按“限速前速率 - 实际速率 > 1”判断，当前阈值字段仅保留配置兼容。</div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center;">
+            <button type="submit" class="btn">保存配置</button>
+          </div>
+        </form>
+      </div>
+
+      <div v-if="currentTab === 'alerts'" class="card">
+        <h2>报警历史 <span>{{ alerts.length }} 条记录</span></h2>
+        <div v-if="alerts.length > 0">
+          <div v-for="alert in alerts" :key="alert.timestamp" class="alert-item">
+            <div class="alert-content">
+              <strong>{{ alert.apiName }}</strong> - 限速前: {{ alert.rawQps }}, 实际: {{ alert.currentQps }}, 差值: {{ alert.diffQps }}
+            </div>
+            <div class="alert-time">{{ alert.time }}</div>
+          </div>
+        </div>
+        <div v-else style="color: #9ca3af; text-align: center; padding: 40px;">
+          暂无报警记录，一切正常
+        </div>
+      </div>
+
+      <div v-if="saveDialog.visible" class="toast-stack">
+        <div class="toast" :class="saveDialog.type" role="status" aria-live="polite">
+          <div class="toast-header">
+            <div class="toast-title">{{ saveDialog.title }}</div>
+            <button type="button" class="toast-close" @click="closeSaveDialog" aria-label="关闭">×</button>
+          </div>
+          <div class="toast-body">
+            <div class="toast-message">{{ saveDialog.message }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
