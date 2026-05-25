@@ -1,0 +1,48 @@
+{
+  "grafana": {
+    "baseUrl": "http://inner-grafana.xiguaji.com",
+    "dashboardUrl": "http://inner-grafana.xiguaji.com/d/MHpMo164k/ren-wu-zhi-xing-bao-biao?orgId=1&refresh=5s&var-group=All&var-job=qiangua:XiaoHongShu.DataTask.SpiderTask.%E5%B8%A6%E8%B4%A7%E7%9B%B8%E5%85%B3.%E5%BA%97%E9%93%BA%E5%95%86%E5%93%81%E9%87%87%E9%9B%86&from=now-1h&to=now&var-compareTime=5m",
+    "datasourceUid": "EpmR-w1Vk",
+    "group": "All",
+    "job": "qiangua:XiaoHongShu.DataTask.SpiderTask.带货相关.店铺商品采集",
+    "compareTime": "5m",
+    "timeRange": "now-1h",
+    "useSimulate": false,
+    "username": "gfxigua",
+    "password": "QujTijJKsFC95SBm",
+    "queryExpressions": {
+      "total": "sum(increase(spider_console_execute_total{type=\"Total\",job=~\"$job\"}[$compareTime]))",
+      "success": "sum(increase(spider_console_execute_total{type=\"Success\",job=~\"$job\"}[$compareTime]))",
+      "failure": "sum(increase(spider_console_execute_total{type=\"Failure\",job=~\"$job\"}[$compareTime]))"
+    }
+  },
+  "feishu": {
+    "webhookUrl": "https://open.feishu.cn/open-apis/bot/v2/hook/46a0f903-f7ed-4617-a159-1da1f98e3757"
+  },
+  "monitor": {
+    "tasks": [
+      {
+        "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.带货相关.店铺商品采集",
+        "successRateThreshold": 50,
+        "successCountThreshold": 3000
+      },
+      {
+        "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.笔记相关.笔记信息采集入队_ArticleFromChannels_近两天",
+        "successRateThreshold": 50,
+        "successCountThreshold": 1000
+      },
+      {
+        "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.达人相关.达人笔记列表数据采集_长期未更新达人",
+        "successCountThreshold": 1000,
+        "successRateThreshold": 90
+      }
+    ],
+    "checkInterval": 60000,
+    "defaultSuccessRateThreshold": 50,
+    "alertCooldown": 1800000,
+    "defaultSuccessCountThreshold": 1
+  },
+  "server": {
+    "port": 3006
+  }
+}

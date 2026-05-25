@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>小红书接口监控系统</title>
+  <title>小红书任务执行监控系统</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -138,8 +138,8 @@
     .qps-main {
       display: flex;
       align-items: flex-end;
-      justify-content: space-between;
-      gap: 12px;
+      justify-content: flex-start;
+      gap: 8px;
       margin-top: 16px;
     }
     .qps-item .qps-value {
@@ -155,53 +155,36 @@
       margin-top: 8px;
       font-weight: 500;
     }
-    .qps-item .threshold-info {
+    .metric-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
       margin-top: 16px;
       padding-top: 14px;
       border-top: 1px solid #f1f5f9;
     }
-    .threshold-item {
-      min-width: 0;
-      padding: 9px 10px;
+    .metric-cell {
+      background: #f8fafc;
       border: 1px solid #eef2f7;
       border-radius: 7px;
-      background: #f8fafc;
+      padding: 10px;
+      min-width: 0;
     }
-    .threshold-item span {
-      display: block;
-      color: #64748b;
+    .metric-cell .metric-label {
       font-size: 12px;
-      font-weight: 500;
-      line-height: 1;
+      color: #6b7280;
     }
-    .threshold-item strong {
-      display: block;
+    .metric-cell .metric-value {
+      margin-top: 4px;
       color: #111827;
       font-size: 15px;
       font-weight: 700;
-      line-height: 1;
-      margin-top: 8px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-    }
-    .status-badge {
-      display: inline-block;
-      flex: 0 0 auto;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      background: #f3f4f6;
       line-height: 1.2;
-      white-space: nowrap;
+      word-break: break-all;
     }
-    .status-badge.ok { background: #ecfdf5; color: #047857; border: 1px solid #bbf7d0; }
-    .status-badge.low { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .metric-cell.warning .metric-value {
+      color: #991b1b;
+    }
     .empty-state {
       margin: 0;
       padding: 42px 24px;
@@ -220,6 +203,19 @@
       font-size: 13px;
       margin-top: 8px;
     }
+    .status-badge {
+      display: inline-block;
+      flex: 0 0 auto;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #f3f4f6;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .status-badge.ok { background: #ecfdf5; color: #047857; border: 1px solid #bbf7d0; }
+    .status-badge.low { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
     .form-group { margin-bottom: 18px; }
     .form-group label {
       display: block;
@@ -346,14 +342,6 @@
     }
     .alert-item .alert-time { font-size: 13px; color: #6b7280; font-weight: 500; }
     .alert-item .alert-content { color: #111827; font-weight: 500; line-height: 1.6; }
-    .last-update {
-      text-align: center;
-      color: #9ca3af;
-      font-size: 13px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid #e5e7eb;
-    }
     .config-section {
       margin-bottom: 24px;
       padding-bottom: 24px;
@@ -501,7 +489,7 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-    .qps-summary {
+    .task-summary {
       margin-top: 20px;
     }
     .stat-item {
@@ -595,18 +583,10 @@
         padding-left: 14px;
         padding-right: 14px;
       }
-      .card h2 {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-      .section-title-meta {
-        margin-left: 0;
-        white-space: normal;
-      }
       .grid {
         grid-template-columns: 1fr;
       }
-      .qps-summary {
+      .task-summary {
         display: grid;
         grid-template-columns: 1fr;
       }
@@ -633,74 +613,78 @@
         width: 100%;
         min-width: 0;
       }
+      .card h2 {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .section-title-meta {
+        margin-left: 0;
+        white-space: normal;
+      }
     }
   </style>
 </head>
 <body>
   <div id="app">
     <div class="container">
-      <h1>小红书接口监控系统</h1>
+      <h1>小红书任务执行监控系统</h1>
 
       <div class="tabs">
-        <button class="tab" :class="{ active: currentTab === 'dashboard' }" @click="currentTab = 'dashboard'">
-          监控面板
-        </button>
-        <button class="tab" :class="{ active: currentTab === 'config' }" @click="currentTab = 'config'">
-          配置管理
-        </button>
-        <button class="tab" :class="{ active: currentTab === 'alerts' }" @click="currentTab = 'alerts'">
-          报警历史
-        </button>
+        <button class="tab" :class="{ active: currentTab === 'dashboard' }" @click="currentTab = 'dashboard'">监控面板</button>
+        <button class="tab" :class="{ active: currentTab === 'config' }" @click="currentTab = 'config'">配置管理</button>
+        <button class="tab" :class="{ active: currentTab === 'alerts' }" @click="currentTab = 'alerts'">报警历史</button>
       </div>
 
       <div v-if="currentTab === 'dashboard'" class="dashboard-page">
         <div class="card dashboard-section-card">
           <h2>
             <span class="section-title-main">
-              实时 QPS 数据
-              <span>{{ Object.keys(currentQPS).length }} 个接口</span>
+              实时任务执行数据
+              <span>{{ Object.keys(currentTasks).length }} 个任务</span>
             </span>
             <span class="section-title-meta">最后更新: {{ lastUpdate || '--' }}</span>
           </h2>
-          <div class="stats-bar qps-summary">
+          <div class="stats-bar task-summary">
             <div class="stat-item total-stat">
-              <div class="stat-label">总接口数</div>
-              <div class="stat-value">{{ Object.keys(currentQPS).length }}</div>
+              <div class="stat-label">总任务数</div>
+              <div class="stat-value">{{ Object.keys(currentTasks).length }}</div>
             </div>
             <div class="stat-item">
-              <div class="stat-label">正常接口</div>
+              <div class="stat-label">正常任务</div>
               <div class="stat-value">{{ healthyCount }}</div>
             </div>
             <div class="stat-item low-stat">
-              <div class="stat-label">异常接口</div>
-              <div class="stat-value">{{ lowCount }}</div>
+              <div class="stat-label">异常任务</div>
+              <div class="stat-value">{{ abnormalCount }}</div>
             </div>
           </div>
-          <div v-if="Object.keys(currentQPS).length > 0" class="grid qps-grid">
-            <div v-for="(qps, api) in currentQPS" :key="api" class="qps-item" :class="{ low: isAbnormal(api, qps) }">
+          <div v-if="Object.keys(currentTasks).length > 0" class="grid">
+            <div v-for="(metrics, task) in currentTasks" :key="task" class="qps-item" :class="{ low: isAbnormal(task, metrics) }">
               <div class="qps-card-header">
-                <div class="api-name">{{ api }}</div>
-                <span v-if="isAbnormal(api, qps)" class="status-badge low">异常 {{ getAbnormalStreak(qps) }}/{{ getAlertRequiredStreak(qps) }}</span>
+                <div class="api-name" :title="task">{{ formatTaskName(task) }}</div>
+                <span v-if="isAbnormal(task, metrics)" class="status-badge low">异常 {{ getAbnormalStreak(metrics) }}/{{ getAlertRequiredStreak(metrics) }}</span>
                 <span v-else class="status-badge ok">正常</span>
               </div>
               <div class="qps-main">
-                <div>
-                  <div class="qps-value">{{ formatQps(getActualQps(qps)) }}</div>
-                  <div class="qps-label">实际速率</div>
-                </div>
+                <div class="qps-value">{{ formatMetric(getSuccessRate(metrics), '%') }}</div>
+                <div class="qps-label">成功率</div>
               </div>
-              <div class="threshold-info">
-                <div class="threshold-item">
-                  <span>限速前</span>
-                  <strong>{{ formatQps(getRawQps(qps)) }}</strong>
+              <div class="metric-grid">
+                <div class="metric-cell">
+                  <div class="metric-label">总执行数</div>
+                  <div class="metric-value">{{ formatMetric(getTotalCount(metrics)) }}</div>
                 </div>
-                <div class="threshold-item">
-                  <span>差值</span>
-                  <strong>{{ formatQps(getDiffQps(qps)) }}</strong>
+                <div class="metric-cell">
+                  <div class="metric-label">成功数</div>
+                  <div class="metric-value">{{ formatMetric(getSuccessCount(metrics)) }}</div>
                 </div>
-                <div class="threshold-item">
-                  <span>阈值</span>
-                  <strong>{{ getThreshold(api) }}</strong>
+                <div class="metric-cell" :class="{ warning: metrics && getSuccessCount(metrics) < getThresholds(task).successCountThreshold }">
+                  <div class="metric-label">成功数阈值</div>
+                  <div class="metric-value">{{ getThresholds(task).successCountThreshold }}</div>
+                </div>
+                <div class="metric-cell" :class="{ warning: metrics && getSuccessRate(metrics) < getThresholds(task).successRateThreshold }">
+                  <div class="metric-label">成功率阈值</div>
+                  <div class="metric-value">{{ getThresholds(task).successRateThreshold }}%</div>
                 </div>
               </div>
             </div>
@@ -712,19 +696,19 @@
         </div>
 
         <div class="card dashboard-section-card">
-          <h2>实时 QPS 趋势</h2>
+          <h2>成功数趋势</h2>
           <div class="chart-panel">
             <div class="chart-toolbar">
               <div class="chart-toolbar-title">最近 30 分钟</div>
               <div class="chart-filter">
-                <select v-model="selectedApi" @change="updateChart">
-                  <option value="">全部接口</option>
-                  <option v-for="api in apiNames" :key="api" :value="api">{{ api }}</option>
+                <select v-model="selectedTask" @change="updateChart">
+                  <option value="">全部任务</option>
+                  <option v-for="task in taskNames" :key="task" :value="task">{{ formatTaskName(task) }}</option>
                 </select>
               </div>
             </div>
             <div class="chart-container">
-              <canvas id="qpsChart"></canvas>
+              <canvas id="taskChart"></canvas>
             </div>
           </div>
         </div>
@@ -741,11 +725,11 @@
             </div>
             <div class="form-group">
               <label>Grafana 地址</label>
-              <input v-model="config.grafana.baseUrl" placeholder="http://localhost:3000" />
+              <input v-model="config.grafana.baseUrl" placeholder="http://inner-grafana.xiguaji.com" />
             </div>
             <div class="form-group">
               <label>Grafana Dashboard 地址</label>
-              <input v-model="config.grafana.dashboardUrl" placeholder="http://localhost:3000/d/uid/name?orgId=1" />
+              <input v-model="config.grafana.dashboardUrl" placeholder="http://inner-grafana.xiguaji.com/d/..." />
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -757,37 +741,36 @@
                 <input type="password" v-model="config.grafana.password" placeholder="password" />
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>数据源 UID</label>
-                <input v-model="config.grafana.datasourceUid" placeholder="a930f974-4513-411b-9d2c-882a9510b71c" />
-              </div>
-              <div class="form-group">
-                <label>指标名称</label>
-                <input v-model="config.grafana.metricName" placeholder="xhs_api_request_status_code" />
-              </div>
-              <div class="form-group">
-                <label>限速前指标名称</label>
-                <input v-model="config.grafana.beforeLimitMetricName" placeholder="xhs_api_before_limit_request" />
-              </div>
-            </div>
             <div class="form-row-3">
               <div class="form-group">
-                <label>API 标签</label>
-                <input v-model="config.grafana.apiLabel" placeholder="ApiPath" />
+                <label>数据源 UID</label>
+                <input v-model="config.grafana.datasourceUid" placeholder="prometheus" />
               </div>
               <div class="form-group">
-                <label>Job 标签</label>
-                <input v-model="config.grafana.jobLabel" placeholder="job" />
+                <label>分组</label>
+                <input v-model="config.grafana.group" placeholder="All" />
               </div>
               <div class="form-group">
-                <label>Job 值</label>
-                <input v-model="config.grafana.jobValue" placeholder="xhs_gateway" />
+                <label>对比时间</label>
+                <input v-model="config.grafana.compareTime" placeholder="5m" />
               </div>
             </div>
             <div class="form-group">
-              <label>Rate 时间窗口</label>
-              <input v-model="config.grafana.rateInterval" placeholder="1m" />
+              <label>默认 Job</label>
+              <input v-model="config.grafana.job" placeholder="qiangua:XiaoHongShu.DataTask..." />
+            </div>
+            <div class="form-group">
+              <label>总执行数 PromQL</label>
+              <textarea v-model="config.grafana.queryExpressions.total"></textarea>
+            </div>
+            <div class="form-group">
+              <label>成功数 PromQL</label>
+              <textarea v-model="config.grafana.queryExpressions.success"></textarea>
+            </div>
+            <div class="form-group">
+              <label>失败数 PromQL</label>
+              <textarea v-model="config.grafana.queryExpressions.failure"></textarea>
+              <div class="help-text">可使用 $job、$group、$compareTime 占位符。</div>
             </div>
           </div>
 
@@ -803,50 +786,54 @@
             <h3>监控配置</h3>
             <div class="form-row-3">
               <div class="form-group">
-                <label>默认差值报警阈值</label>
-                <input type="number" v-model.number="config.monitor.defaultQpsThreshold" />
+                <label>默认成功数阈值</label>
+                <input type="number" v-model.number="config.monitor.defaultSuccessCountThreshold" />
+              </div>
+              <div class="form-group">
+                <label>默认成功率阈值</label>
+                <input type="number" v-model.number="config.monitor.defaultSuccessRateThreshold" />
               </div>
               <div class="form-group">
                 <label>检查间隔（毫秒）</label>
                 <input type="number" v-model.number="config.monitor.checkInterval" />
               </div>
-              <div class="form-group">
-                <label>报警冷却（毫秒）</label>
-                <input type="number" v-model.number="config.monitor.alertCooldown" />
-              </div>
+            </div>
+            <div class="form-group">
+              <label>报警冷却（毫秒）</label>
+              <input type="number" v-model.number="config.monitor.alertCooldown" />
             </div>
 
             <div class="form-group" style="margin-top: 16px;">
               <div class="api-list-header">
-                <span class="api-list-title">接口配置列表</span>
-                <button type="button" class="btn btn-small btn-secondary" @click="addApi">
-                  添加接口
-                </button>
+                <span class="api-list-title">任务配置列表</span>
+                <button type="button" class="btn btn-small btn-secondary" @click="addTask">添加任务</button>
               </div>
               <div style="overflow-x: auto;">
                 <table class="api-table">
                   <thead>
                     <tr>
-                      <th style="width: 50%;">接口名称</th>
-                      <th style="width: 25%;">差值阈值</th>
-                      <th style="width: 25%;">操作</th>
+                      <th style="width: 46%;">任务名称</th>
+                      <th style="width: 18%;">成功数阈值</th>
+                      <th style="width: 18%;">成功率阈值</th>
+                      <th style="width: 18%;">操作</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(api, index) in config.monitor.apis" :key="index">
-                      <td><input v-model="api.name" placeholder="接口名称" /></td>
-                      <td><input type="number" v-model.number="api.threshold" /></td>
+                    <tr v-for="(task, index) in config.monitor.tasks" :key="index">
+                      <td><input v-model="task.name" placeholder="任务名称或 Job 值" /></td>
+                      <td><input type="number" v-model.number="task.successCountThreshold" /></td>
+                      <td><input type="number" v-model.number="task.successRateThreshold" /></td>
                       <td>
                         <div class="table-actions">
-                          <button type="button" class="btn btn-small btn-secondary" @click="sendApiAlert(api.name)">发送报警</button>
-                          <button type="button" class="btn btn-small btn-danger" @click="removeApi(index)">删除</button>
+                          <button type="button" class="btn btn-small btn-secondary" @click="sendTaskAlert(task.name)">发送报警</button>
+                          <button type="button" class="btn btn-small btn-danger" @click="removeTask(index)">删除</button>
                         </div>
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <div class="help-text">提示：接口异常按“限速前速率 - 实际速率 > 1”判断，当前阈值字段仅保留配置兼容。</div>
+              <div class="help-text">提示：任务异常按“成功数低于阈值或成功率低于阈值”判断，连续 10 次异常后报警。</div>
             </div>
           </div>
 
@@ -861,14 +848,12 @@
         <div v-if="alerts.length > 0">
           <div v-for="alert in alerts" :key="alert.timestamp" class="alert-item">
             <div class="alert-content">
-              <strong>{{ alert.apiName }}</strong> - 限速前: {{ alert.rawQps }}, 实际: {{ alert.currentQps }}, 差值: {{ alert.diffQps }}
+              <strong>{{ alert.taskName }}</strong> - 总数: {{ alert.totalCount }}, 成功: {{ alert.successCount }}, 失败: {{ alert.failureCount }}, 成功率: {{ alert.successRate }}%
             </div>
             <div class="alert-time">{{ alert.time }}</div>
           </div>
         </div>
-        <div v-else style="color: #9ca3af; text-align: center; padding: 40px;">
-          暂无报警记录，一切正常
-        </div>
+        <div v-else style="color: #9ca3af; text-align: center; padding: 40px;">暂无报警记录，一切正常</div>
       </div>
 
       <div v-if="saveDialog.visible" class="toast-stack">
