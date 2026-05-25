@@ -10,20 +10,24 @@ let metricsState = {
   alertHistory: []
 };
 
+const HISTORY_WINDOW_MS = 30 * 60 * 1000;
+
 function updateMetrics(qpsData, alerts) {
   const now = Date.now();
   const time = new Date(now).toLocaleString('zh-CN', { hour12: false });
+  const cutoff = now - HISTORY_WINDOW_MS;
 
   metricsState.currentQPS = qpsData;
-  metricsState.history.unshift({ time, data: { ...qpsData } });
-
-  if (metricsState.history.length > 60) {
-    metricsState.history = metricsState.history.slice(0, 60);
-  }
+  metricsState.history.unshift({ timestamp: now, time, data: { ...qpsData } });
+  metricsState.history = metricsState.history.filter(h => h.timestamp >= cutoff);
 }
 
 function setAlertHistory(history) {
   metricsState.alertHistory = history;
+}
+
+function getMetricsState() {
+  return metricsState;
 }
 
 router.get('/current', async (ctx) => {
@@ -94,4 +98,4 @@ router.post('/alerts/test', async (ctx) => {
   };
 });
 
-module.exports = { router, updateMetrics, setAlertHistory };
+module.exports = { router, updateMetrics, setAlertHistory, getMetricsState };

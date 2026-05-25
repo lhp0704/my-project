@@ -114,7 +114,7 @@ createApp({
       if (qpsInfo && typeof qpsInfo === 'object' && qpsInfo.alertRequiredStreak !== undefined) {
         return qpsInfo.alertRequiredStreak;
       }
-      return 5;
+      return 10;
     }
 
     function formatQps(value) {
@@ -385,7 +385,10 @@ createApp({
         const res = await fetch('/api/metrics/history');
         const data = await res.json();
         if (data.success) {
-          history.value = data.data.slice(0, 30);
+          const cutoff = Date.now() - (30 * 60 * 1000);
+          history.value = data.data
+            .filter(h => !h.timestamp || h.timestamp >= cutoff)
+            .reverse();
           await nextTick();
           updateChart();
         }

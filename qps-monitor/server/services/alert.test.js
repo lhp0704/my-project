@@ -22,7 +22,7 @@ test('alerts when diff is greater than 1 and actual rate is below threshold', ()
   setHour(service, 9);
   let alerts = [];
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     alerts = service.checkAlerts({
       ApiA: { rawQps: 8.5, actualQps: 7.4 }
     });
@@ -33,11 +33,11 @@ test('alerts when diff is greater than 1 and actual rate is below threshold', ()
   assert.equal(alerts[0].diffQps, 1.1);
 });
 
-test('does not alert before the same api is abnormal five times in a row', () => {
+test('does not alert before the same api is abnormal ten times in a row', () => {
   const service = createService();
   setHour(service, 9);
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 9; i++) {
     const alerts = service.checkAlerts({
       ApiA: { rawQps: 8.5, actualQps: 7.4 }
     });
@@ -58,7 +58,7 @@ test('adds abnormal streak metadata before an alert is sent', () => {
   service.checkAlerts(qpsData);
 
   assert.equal(qpsData.ApiA.abnormalStreak, 3);
-  assert.equal(qpsData.ApiA.alertRequiredStreak, 5);
+  assert.equal(qpsData.ApiA.alertRequiredStreak, 10);
 });
 
 test('shows the triggering streak after an alert is sent and restarts on the next abnormal sample', () => {
@@ -68,12 +68,12 @@ test('shows the triggering streak after an alert is sent and restarts on the nex
     ApiA: { rawQps: 8.5, actualQps: 7.4 }
   };
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     service.checkAlerts(qpsData);
   }
 
-  assert.equal(qpsData.ApiA.abnormalStreak, 5);
-  assert.equal(qpsData.ApiA.alertRequiredStreak, 5);
+  assert.equal(qpsData.ApiA.abnormalStreak, 10);
+  assert.equal(qpsData.ApiA.alertRequiredStreak, 10);
 
   service.checkAlerts(qpsData);
 
@@ -84,7 +84,7 @@ test('resets the abnormal streak when a normal sample is received', () => {
   const service = createService();
   setHour(service, 9);
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 9; i++) {
     service.checkAlerts({
       ApiA: { rawQps: 8.5, actualQps: 7.4 }
     });
@@ -94,7 +94,7 @@ test('resets the abnormal streak when a normal sample is received', () => {
     ApiA: { rawQps: 8.5, actualQps: 7.5 }
   });
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 9; i++) {
     const alerts = service.checkAlerts({
       ApiA: { rawQps: 8.5, actualQps: 7.4 }
     });
@@ -144,7 +144,7 @@ test('alerts when actual rate is 0, threshold is higher, and diff is greater tha
   setHour(service, 9);
   let alerts = [];
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     alerts = service.checkAlerts({
       ApiA: { rawQps: 1.5, actualQps: 0 }
     });

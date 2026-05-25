@@ -5,7 +5,7 @@ class AlertService {
     this.config = config;
     this.lastAlertTime = {};
     this.abnormalStreaks = {};
-    this.alertRequiredStreak = 5;
+    this.alertRequiredStreak = 10;
     this.alertHistory = [];
     this.getNow = () => Date.now();
   }
