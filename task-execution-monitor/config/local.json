@@ -33,7 +33,7 @@
       },
       {
         "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.达人相关.达人笔记列表数据采集_长期未更新达人",
-        "successCountThreshold": 1000,
+        "successCountThreshold": 300,
         "successRateThreshold": 90
       }
     ],
