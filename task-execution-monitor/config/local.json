@@ -24,7 +24,7 @@
       {
         "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.带货相关.店铺商品采集",
         "successRateThreshold": 50,
-        "successCountThreshold": 3000
+        "successCountThreshold": 300
       },
       {
         "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.笔记相关.笔记信息采集入队_ArticleFromChannels_近两天",
