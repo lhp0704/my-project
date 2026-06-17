@@ -23,17 +23,17 @@
     "tasks": [
       {
         "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.带货相关.店铺商品采集",
-        "successRateThreshold": 50,
-        "successCountThreshold": 300
+        "successRateThreshold": 10,
+        "successCountThreshold": 250
       },
       {
         "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.笔记相关.笔记信息采集入队_ArticleFromChannels_近两天",
-        "successRateThreshold": 50,
-        "successCountThreshold": 1000
+        "successRateThreshold": 25,
+        "successCountThreshold": 250
       },
       {
         "name": "qiangua:XiaoHongShu.DataTask.SpiderTask.达人相关.达人笔记列表数据采集_长期未更新达人",
-        "successCountThreshold": 300,
+        "successCountThreshold": 250,
         "successRateThreshold": 90
       }
     ],

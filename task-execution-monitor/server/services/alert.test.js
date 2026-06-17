@@ -77,12 +77,16 @@ test('resets the abnormal streak when a normal sample is received', () => {
   assert.equal(alerts.length, 1);
 });
 
-test('does not alert from 00:00 through before 08:00', () => {
+test('does not alert from 00:00 through before 09:00', () => {
   const service = createService();
-  setHour(service, 2);
-  const alerts = service.checkAlerts({
-    TaskA: { totalCount: 10, successCount: 8, failureCount: 2, successRate: 80 }
-  });
+  setHour(service, 8);
+  let alerts = [];
+
+  for (let i = 0; i < 10; i++) {
+    alerts = service.checkAlerts({
+      TaskA: { totalCount: 10, successCount: 8, failureCount: 2, successRate: 80 }
+    });
+  }
 
   assert.equal(alerts.length, 0);
 });

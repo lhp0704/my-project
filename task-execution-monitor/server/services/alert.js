@@ -65,7 +65,7 @@ class AlertService {
     const alerts = [];
     const now = this.getNow();
     const currentHour = new Date(now).getHours();
-    if (currentHour >= 0 && currentHour < 8) {
+    if (currentHour >= 0 && currentHour < 9) {
       return alerts;
     }
 

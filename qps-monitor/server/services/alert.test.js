@@ -119,12 +119,21 @@ test('does not alert when pre-limit rate minus actual rate is 1 or less', () => 
   assert.equal(alerts.length, 0);
 });
 
-test('does not alert from 00:00 through before 08:00', () => {
+test('does not alert from 00:00 through before 09:00', () => {
   const service = createService();
   setHour(service, 2);
-  const alerts = service.checkAlerts({
+  let alerts = service.checkAlerts({
     ApiA: { rawQps: 8.5, actualQps: 7.4 }
   });
+
+  assert.equal(alerts.length, 0);
+
+  setHour(service, 8);
+  for (let i = 0; i < 10; i++) {
+    alerts = service.checkAlerts({
+      ApiA: { rawQps: 8.5, actualQps: 7.4 }
+    });
+  }
 
   assert.equal(alerts.length, 0);
 });
