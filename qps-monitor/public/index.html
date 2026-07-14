@@ -803,7 +803,7 @@
             <h3>监控配置</h3>
             <div class="form-row-3">
               <div class="form-group">
-                <label>默认差值报警阈值</label>
+                <label>默认实际速率阈值</label>
                 <input type="number" v-model.number="config.monitor.defaultQpsThreshold" />
               </div>
               <div class="form-group">
@@ -828,7 +828,7 @@
                   <thead>
                     <tr>
                       <th style="width: 50%;">接口名称</th>
-                      <th style="width: 25%;">差值阈值</th>
+                      <th style="width: 25%;">实际速率阈值</th>
                       <th style="width: 25%;">操作</th>
                     </tr>
                   </thead>
@@ -846,7 +846,7 @@
                   </tbody>
                 </table>
               </div>
-              <div class="help-text">提示：接口异常按“限速前速率 - 实际速率 > 1”判断，当前阈值字段仅保留配置兼容。</div>
+              <div class="help-text">提示：差值（限速前速率 - 实际速率）> 1，且实际速率低于配置阈值时，判定接口异常。</div>
             </div>
           </div>
 
